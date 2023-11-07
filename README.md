@@ -1,89 +1,130 @@
+
+[![NtdsAudit][screenshot]](https://github.com/1mm0rt41PC/NtdsAudit)
+
+# Password Auditor
 NtdsAudit is an application to assist in auditing Active Directory databases.
 
-It provides some useful statistics relating to accounts and passwords, as shown in the following example. It can also be used to dump password hashes for later cracking. 
+It provides some useful statistics relating to accounts and passwords, as shown in the following example. 
 
-```
-Account stats for: domain.local
-  Disabled users _____________________________________________________   418 of  5164 (8%)
-  Expired users ______________________________________________________    67 of  5164 (1%)
-  Active users unused in 1 year ______________________________________   787 of  4679 (17%)
-  Active users unused in 90 days _____________________________________  1240 of  4679 (27%)
-  Active users which do not require a password _______________________   156 of  4679 (3%)
-  Active users with non-expiring passwords ___________________________  3907 of  4679 (84%)
-  Active users with password unchanged in 1 year _____________________  1006 of  4679 (22%)
-  Active users with password unchanged in 90 days ____________________  1400 of  4679 (30%)
-  Active users with Administrator rights _____________________________    63 of  4679 (1%)
-  Active users with Domain Admin rights ______________________________    54 of  4679 (1%)
-  Active users with Enterprise Admin rights __________________________     0 of  4679 (0%)
+## Usage
+NtdsAudit Bloodhound-Edition requires docker and hashcat.
 
-  Disabled computer accounts _________________________________________    86 of  1414 (6%)
+### 1: Obtaining the required files
 
-Password stats for: domain.local
-  Active users using LM hashing ______________________________________    40 of  4679 (1%)
-  Active users with duplicate passwords ______________________________  2312 of  4679 (49%)
-  Active users with password stored using reversible encryption ______  4666 of  4679 (100%)
-```
+#### 1.A: Bloodhound
+Run a Bloodhound collector of your choice:
+- [Sharphound](https://github.com/BloodHoundAD/SharpHound)
+- [Rusthound](https://github.com/NH-RED-TEAM/RustHound)
+- [Bloodhound.py](https://github.com/dirkjanm/BloodHound.py)
+- [AdExplorer ](https://learn.microsoft.com/en-us/sysinternals/downloads/adexplorer) + [ADExplorerSnapshot](https://github.com/c3c/ADExplorerSnapshot.py)
 
-### Usage
-NtdsAudit requires version 4.6 or newer of the .NET framework.
-
-```
-Usage:  [arguments] [options]
-
-Arguments:
-  NTDS file  The path of the NTDS.dit database to be audited, required.
-
-Options:
-  -v | --version               Show version information
-  -h | --help                  Show help information
-  -s | --system <file>         The path of the associated SYSTEM hive, required when using the pwdump option.
-  -p | --pwdump <file>         The path to output hashes in pwdump format.
-  -u | --users-csv <file>      The path to output user details in CSV format.
-  -c | --computers-csv <file>  The path to output computer details in CSV format.
-  --history-hashes             Include history hashes in the pdwump output.
-  --dump-reversible <file>     The path to output clear text passwords, if reversible encryption is enabled.
-  --wordlist                   The path to a wordlist of weak passwords for basic hash cracking. Warning, using this option is slow, the use of a dedicated password cracker, such as 'john', is recommended instead.
-  --ou-filter-file <file>      The path to file containing a line separated list of OUs to which to limit user and computer results.
-  --base-date <yyyyMMdd>       Specifies a custom date to be used as the base date in statistics. The last modified date of the NTDS file is used by default.
-  --debug                      Show debug output.
-
-WARNING: Use of the --pwdump option will result in decryption of password hashes using the System Key.
-Sensitive information will be stored in memory and on disk. Ensure the pwdump file is handled appropriately
-```
-
-For example, the following command will display statistics, output a file `pwdump.txt` containing password hashes, and output a file `users.csv` containing details for each user account.
-
-```
-ntdsaudit ntds.dit -s SYSTEM -p pwdump.txt -u users.csv
-```
-
-### Obtaining the required files
-NtdsAudit requires the `ntds.dit` Active Directory database, and optionally the `SYSTEM` registry hive if dumping password hashes. These files are locked by a domain controller and as such cannot be simply copy and pasted. The recommended method of obtaining these files from a domain controller is using the builtin `ntdsutil` utility. 
+#### 1.B: Dump the domain via ntdsutils
+Dump the `ntds.dit` Active Directory database, and the `SYSTEM` registry hive. These files are locked by a domain controller and as such cannot be simply copy and pasted. The recommended method of obtaining these files from a domain controller is using the builtin `ntdsutil` utility. 
 
 * Open a command prompt (cmd.exe) as an administrator. To open a command prompt as an administrator, click Start. In Start Search, type Command Prompt. At the top of the Start menu, right-click Command Prompt, and then click Run as administrator. If the User Account Control dialog box appears, enter the appropriate credentials (if requested) and confirm that the action it displays is what you want, and then click Continue.
 
 * At the command prompt, type the following command, and then press ENTER:
 
 ```
-ntdsutil
+C:\> ntdsutil "activate instance ntds" "ifm" "create full C:\pentest" quit quit
 ```
 
-* At the ntdsutil prompt, type the following command, and then press ENTER:
+Where `C:\pentest` is the path to the folder where you want the files to be created.
 
-```
-activate instance ntds
+Then on Kali linux like extract hashes via impacket:
+```bash
+root@kali:~$ secretdumps.py -history -system SYSTEM -ntds ntds.dit local | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > secretdumps.txt
+xxx\azerty:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history0:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history1:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history2:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history3:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history4:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history0:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history1:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history2:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history3:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history4:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+qsd:409948:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history0:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history1:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history2:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history3:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history4:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+computer47$:569350:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+...
 ```
 
-* At the ntdsutil prompt, type the following command, and then press ENTER:
 
-```
-ifm
+#### 1.B Bis: Dump the domain via dcsync
+```bash
+root@kali:~$ secretdumps.py -history DOMAIN/DOMAINADMIN_USER:PASSWORD@IP_DC | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > secretdumps.txt
+xxx\azerty:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history0:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history1:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history2:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history3:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+xxx\azerty_history4:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history0:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history1:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history2:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history3:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+aze_history4:411860:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+qsd:409948:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history0:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history1:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history2:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history3:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+wxc_history4:560774:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+computer47$:569350:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
+...
 ```
 
-* At the ifm prompt, type the following command, and then press ENTER:
+#### 1.C: Cleaning files
+Remove all accounts that have a dynamic password (Computers, krbtgt, MSOL_...)
 
-```
-create full <Drive>:\<Folder>
+```bash
+root@kali:~$ grep -Ei '^[^$]+:[a-f0-9]{32}:[a-f0-9]{32}:::' secretdumps.txt | grep -viE '(krbtgt|MSOL_)' > hashcat_target.txt
 ```
 
-Where `<Drive>:\<Folder>` is the path to the folder where you want the files to be created. 
+#### 1.D: Run the glorious Hashcat
+```bash
+root@kali:~$ hashcat -m 1000 hashcat_target.txt ...
+```
+
+#### 2: Create a basic list of not allowed words for the corp:
+```bash
+root@kali:~/NtdsAudit/$ cat bad-word.txt
+welcome
+bonjour
+geneve
+lausanne
+password
+my-corp
+```
+
+#### 3: Place all files in the correct path
+git clone this repo and put all files in `neo4j-import`
+```bash
+root@kali:~$ git clone https://github.com/1mm0rt41PC/NtdsAudit
+root@kali:~$ cd NtdsAudit
+root@kali:~/NtdsAudit/$ ll neo4j-import
+-rwx------  1 root root 37233326 Nov  5 22:35 corp.lan_bloodhound.zip
+-rwx------  1 root root   163436 Nov  5 23:01 secretdumps.csv
+```
+
+## Generate base CSV for Bloodhound
+```bash
+root@kali:~/NtdsAudit/$ bash main.sh ~/NtdsAudit/neo4j-import/secretdumps.csv ~/NtdsAudit/bad-word.txt
+...
+root@kali:~/NtdsAudit/$ ls output
+-rwx------  1 root root 37233326 Nov  5 23:35 PasswordPolicy.xlsx
+```
+
+
+<!-- MARKDOWN LINKS & IMAGES -->
+[screenshot]: doc/screenshot.png
