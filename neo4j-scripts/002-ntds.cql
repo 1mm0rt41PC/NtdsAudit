@@ -17,7 +17,7 @@ MATCH (u:User)
 		u.pwdHIBP          = FALSE;
 
 // Create a fields that contains all group that users is MemberOf
-MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccoutname+' / ';
+MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccountname+' / ';
 // Clean up the field
 MATCH (u:User) WHERE u.memberOf IS NOT NULL SET u.memberOf=left(u.memberOf,size(u.memberOf)-3);
 
