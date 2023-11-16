@@ -159,10 +159,9 @@ fi
 docker run --rm -it --network=host -v $NEO4J_PATH/neo4j-import:/data --env-file $NEO4J_PATH/.env.docker starhound-importer
 
 cypher_shell /neo4j-scripts/001-fix-bloodhound-err.cql
-cypher_shell /neo4j-scripts/002-ntds.cql
-cypher_shell /neo4j-scripts/003-tier0-tag.cql
 cypher_shell /neo4j-scripts/999-warmup.cql
-
+cypher_shell /neo4j-scripts/002-tier0-tag.cql
+cypher_shell /neo4j-scripts/003-ntds.cql
 
 cypher_shell /neo4j-scripts/010-list-users.cql
 cypher_shell /neo4j-scripts/020-List-of-password-reuse.cql
