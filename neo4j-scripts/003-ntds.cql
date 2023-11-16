@@ -21,25 +21,6 @@ MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccountna
 // Clean up the field
 MATCH (u:User) WHERE u.memberOf IS NOT NULL SET u.memberOf=left(u.memberOf,size(u.memberOf)-3);
 
-// Mark all users of critical groups => memberOf Tier0
-MATCH (u:User)-[:MemberOf*..]->(g:Group)
-WHERE
-	   g.objectid ENDS WITH '-512'
-	OR g.objectid ENDS WITH '-517'
-	OR g.objectid ENDS WITH '-518'
-	OR g.objectid ENDS WITH '-519'
-	OR g.objectid ENDS WITH '-520'
-	OR g.objectid ENDS WITH '-526'
-	OR g.objectid ENDS WITH '-527'
-	OR g.objectid ENDS WITH '-1101'
-	OR g.objectid ENDS WITH '-S-1-5-32-544'
-	OR g.objectid ENDS WITH '-S-1-5-32-548'
-	OR g.objectid ENDS WITH '-S-1-5-32-574'
-SET
-	u.isMemberOfTier0=True,
-	g.highvalue=True;
-
-
 // Load all hashes
 MATCH (d:Domain) WHERE d.domainsid IS NOT NULL
 WITH d.domainsid AS domainSid
