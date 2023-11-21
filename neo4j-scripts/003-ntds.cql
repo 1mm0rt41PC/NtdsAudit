@@ -22,42 +22,6 @@ MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccountna
 MATCH (u:User) WHERE u.memberOf IS NOT NULL SET u.memberOf=left(u.memberOf,size(u.memberOf)-3);
 
 
-// Mark all users of critical groups => memberOf Tier0
-MATCH (g:Group)
-WHERE
-	   g.objectid ENDS WITH '-498'// Enterprise Read-only Domain Controllers
-	OR g.objectid ENDS WITH '-512'// Domain Admins
-	OR g.objectid ENDS WITH '-516'// Domain Controllers
-	OR g.objectid ENDS WITH '-517'// Cert Publishers
-	OR g.objectid ENDS WITH '-518'// Schema Admins
-	OR g.objectid ENDS WITH '-519'// Enterprise Admins
-	OR g.objectid ENDS WITH '-520'// Group Policy Creator Owners
-	OR g.objectid ENDS WITH '-521'// Read-only Domain Controllers
-	OR g.objectid ENDS WITH '-526'// Key Admins
-	OR g.objectid ENDS WITH '-527'// Enterprise Key Admins
-	OR g.objectid ENDS WITH '-574'// Certificate Service DCOM Access
-	OR g.objectid ENDS WITH '-S-1-5-9'// Enterprise Domain Controllers
-	OR g.objectid ENDS WITH '-S-1-5-32-544'// Administrators
-	OR g.objectid ENDS WITH '-S-1-5-32-548'// Account Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-549'// Server Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-550'// Print Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-551'// Backup Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-552'// Replicator
-	OR g.objectid ENDS WITH '-S-1-5-32-574'// Certificate Service DCOM Access
-	OR g.samaccountname = 'DNSADMINS'
-SET
-	g.isTier0=True,
-	g.highvalue=True;
-
-
-// Mark all users of critical groups => memberOf Tier0
-MATCH (g:Group{isTier0:True})
-WITH g
-MATCH (u:User)-[:MemberOf*..]->(g)
-SET
-	u.isMemberOfTier0=True;
-
-
 // Load all hashes
 MATCH (d:Domain) WHERE d.domainsid IS NOT NULL
 WITH d.domainsid AS domainSid
