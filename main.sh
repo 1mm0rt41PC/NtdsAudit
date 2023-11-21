@@ -168,6 +168,7 @@ cypher_shell /neo4j-scripts/020-List-of-password-reuse.cql
 cypher_shell /neo4j-scripts/030-List-of-banned-passwords.cql
 cypher_shell /neo4j-scripts/040-Password-length.cql
 cypher_shell /neo4j-scripts/050-Stats.cql
+cypher_shell /neo4j-scripts/060-Definition.cql
 
 mkdir -p $NEO4J_PATH/output
 docker run --rm -v $NEO4J_PATH/output:/output -v $NEO4J_PATH/neo4j-import:/import:ro -v $NEO4J_PATH/:/code:ro -w /code -i python:latest bash -c "pip3 install xlsxwriter; python3 /code/excelGenerator.py"

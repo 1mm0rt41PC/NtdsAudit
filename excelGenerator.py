@@ -158,5 +158,17 @@ with open(r'/import/Report-List-Of-Users.csv', mode='r', encoding='utf8') as csv
 		'value':    0,
 		'format':   format1
 	})
+	
+
+ws		= wb.add_worksheet('Definition')
+with open(r'/import/Report-Definition-T0.csv', mode='r', encoding='utf8') as csv_file:
+	csv_reader = csv.DictReader(csv_file)
+	wb_stats.set_column(0,0, 100)
+	i = 0
+	for row in csv_reader:
+		wb_stats.write(i, 0, row["List of Tier0 items"])
+		i+=1
+	wb_stats.add_table('A2:B15',{'header_row': False, 'style': 'TableStyleMedium4'})
+
 
 wb.close()
