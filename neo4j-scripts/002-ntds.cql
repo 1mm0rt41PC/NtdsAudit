@@ -17,27 +17,45 @@ MATCH (u:User)
 		u.pwdHIBP          = FALSE;
 
 // Create a fields that contains all group that users is MemberOf
-MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccoutname+' / ';
+MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccountname+' / ';
 // Clean up the field
 MATCH (u:User) WHERE u.memberOf IS NOT NULL SET u.memberOf=left(u.memberOf,size(u.memberOf)-3);
 
+
 // Mark all users of critical groups => memberOf Tier0
-MATCH (u:User)-[:MemberOf*..]->(g:Group)
+MATCH (g:Group)
 WHERE
-	   g.objectid ENDS WITH '-512'
-	OR g.objectid ENDS WITH '-517'
-	OR g.objectid ENDS WITH '-518'
-	OR g.objectid ENDS WITH '-519'
-	OR g.objectid ENDS WITH '-520'
-	OR g.objectid ENDS WITH '-526'
-	OR g.objectid ENDS WITH '-527'
-	OR g.objectid ENDS WITH '-1101'
-	OR g.objectid ENDS WITH '-S-1-5-32-544'
-	OR g.objectid ENDS WITH '-S-1-5-32-548'
-	OR g.objectid ENDS WITH '-S-1-5-32-574'
+	   g.objectid ENDS WITH '-498'// Enterprise Read-only Domain Controllers
+	OR g.objectid ENDS WITH '-512'// Domain Admins
+	OR g.objectid ENDS WITH '-516'// Domain Controllers
+	OR g.objectid ENDS WITH '-517'// Cert Publishers
+	OR g.objectid ENDS WITH '-518'// Schema Admins
+	OR g.objectid ENDS WITH '-519'// Enterprise Admins
+	OR g.objectid ENDS WITH '-520'// Group Policy Creator Owners
+	OR g.objectid ENDS WITH '-521'// Read-only Domain Controllers
+	OR g.objectid ENDS WITH '-526'// Key Admins
+	OR g.objectid ENDS WITH '-527'// Enterprise Key Admins
+	OR g.objectid ENDS WITH '-574'// Certificate Service DCOM Access
+	OR g.objectid ENDS WITH '-S-1-5-9'// Enterprise Domain Controllers
+	OR g.objectid ENDS WITH '-S-1-5-32-544'// Administrators
+	OR g.objectid ENDS WITH '-S-1-5-32-548'// Account Operators
+	OR g.objectid ENDS WITH '-S-1-5-32-549'// Server Operators
+	OR g.objectid ENDS WITH '-S-1-5-32-550'// Print Operators
+	OR g.objectid ENDS WITH '-S-1-5-32-551'// Backup Operators
+	OR g.objectid ENDS WITH '-S-1-5-32-552'// Replicator
+	OR g.objectid ENDS WITH '-S-1-5-32-574'// Certificate Service DCOM Access
+	OR g.samaccountname = 'DNSADMINS'
 SET
-	u.isMemberOfTier0=True,
+	g.isTier0=True,
 	g.highvalue=True;
+
+
+// Mark all users of critical groups => memberOf Tier0
+MATCH (g:Group{isTier0:True})
+WITH g
+MATCH (u:User)-[:MemberOf*..]->(g)
+SET
+	u.isMemberOfTier0=True;
 
 
 // Load all hashes

@@ -1,7 +1,12 @@
 CALL db.clearQueryCaches;
 
 // Fix tipo in bloodhound
-MATCH (cp:Computer) SET cp.name=replace(cp.samaccoutname,'$','')+'.'+cp.domain, cp.samaccountname=toUpper(cp.samaccoutname);
+MATCH (c) WHERE c.samaccoutname IS NOT NULL SET c.samaccountname=toUpper(c.samaccoutname);
+MATCH (c) WHERE c.samaccoutname IS NOT NULL SET c.samaccoutname=NULL;
+MATCH (c:Computer) SET c.name=replace(c.samaccountname,'$','')+'.'+c.domain;
+// Fix group naming
+MATCH (g:Group) WHERE g.name IS NULL SET g.name=(CASE WHEN g.samaccountname IS NULL THEN g.objectid ELSE g.samaccountname END);
+MATCH (g:Group) WHERE g.samaccountname IS NULL SET g.samaccountname=SPLIT(g.name,"@")[0];
 
 
 // Normalize fields in bloodhound
@@ -41,4 +46,5 @@ MATCH (g:Gpo) SET g:GPO REMOVE g:Gpo;
 // Normalize Cert
 MATCH (n:GPO) WHERE n.type = 'Certificate Template' SET n:CertificateTemplate;
 MATCH (n:GPO) WHERE n.type = 'Enrollment Service' SET n:CA;
-MATCH (n:CertificateTemplate) SET n.samaccountname=toUpper(n.name);
+
+MATCH (c) WHERE c.samaccountname IS NOT NULL SET c.samaccountname=toUpper(c.samaccountname);

@@ -10,7 +10,7 @@ UNION MATCH (u:User{owned:True,enabled:True}) WHERE u.samaccountname IS NOT NULL
 UNION MATCH (u:User{owned:True,enabled:True,isMemberOfTier0:True}) WHERE u.samaccountname IS NOT NULL RETURN 'Number of compromised active Tier0 Admin' AS `Info`, COUNT(*) AS Number
 UNION MATCH (u:User) WHERE u.samaccountname IS NOT NULL AND u.weakAclPathCount > 0 RETURN 'Number of users that can take over AD items' AS `Info`, COUNT(*) AS Number
 UNION MATCH (u:User) WHERE u.samaccountname IS NOT NULL AND u.tier0PathCount > 0 RETURN 'Number of users that can take over AD Tier0 items' AS `Info`, COUNT(*) AS Number
-UNION MATCH (u:User{enabled:True,pwdBadWord:True}) WHERE u.samaccountname IS NOT NULL RETURN 'Number of active users that have an banned word as password' AS `Info`, COUNT(*) AS Number
+UNION MATCH (u:User{enabled:True,pwdBadWord:True}) WHERE u.samaccountname IS NOT NULL RETURN 'Number of active users who use a banned word in their password' AS `Info`, COUNT(*) AS Number
 UNION MATCH (u:User{owned:True,enabled:True,pwdBadWord:True,isMemberOfTier0:True}) WHERE u.samaccountname IS NOT NULL RETURN 'Number of active Tier0 users that have an banned word as password' AS `Info`, COUNT(*) AS Number
 UNION MATCH (u:User{pwdHIBP:True,enabled:True}) WHERE u.samaccountname IS NOT NULL RETURN 'Number of active users that use a leaked password' AS `Info`, COUNT(*) AS Number
 UNION MATCH (u:User{pwdHIBP:True,enabled:True,isMemberOfTier0:True}) WHERE u.samaccountname IS NOT NULL RETURN 'Number of active Tier0 users that use a leaked password' AS `Info`, COUNT(*) AS Number

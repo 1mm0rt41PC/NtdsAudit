@@ -1,8 +1,5 @@
 CALL db.clearQueryCaches;
 
-// CERT PUBLISHERS
-MATCH (n:Group) WHERE n.objectid ENDS WITH "-517" SET n.highvalue=True; // RETURN n;
-
 // DcSync users
 MATCH p=(x)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) SET x.highvalue=True; // return p;
 
