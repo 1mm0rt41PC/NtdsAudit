@@ -9,7 +9,7 @@ RETURN
 	date(datetime({epochSeconds:toInteger(u.lastlogontimestamp)})) AS LastLogon,
 	u.enabled AS Enabled,
 	u.owned AS `Weak password`,
-	u.pwdBadWord AS `Password contains a banned word`,
+	u.pwdBadWord AS `Password containing a forbidden word`,
 	u.pwdLength AS `Password length`,u.pwdHIBP AS `Password leaked on the Internet`,
 	u.pwdneverexpires AS `Password never expires`,
 	u.passwordnotreqd AS `Password not required`,
@@ -19,7 +19,7 @@ RETURN
 	u.admincount AS `Was in a Tier0 group`,
 	u.isMemberOfTier0 AS `Member Of Tier0`,
 	u.tier0PathCount AS `Number of items of Tier0 that can be compromised`,
-	u.tier0Path AS `Path to item of Tier0 that be compromised`,
+	u.tier0Path AS `Path to item of Tier0 that can be compromised`,
 	u.weakAclPathCount AS `Number of items that can be compromised`,
 	u.weakAclPath AS `Path to item that can be compromised`,	
 	u.memberOf AS `Member Of`
