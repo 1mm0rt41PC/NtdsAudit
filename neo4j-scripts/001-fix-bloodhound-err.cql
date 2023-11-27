@@ -3,10 +3,11 @@ CALL db.clearQueryCaches;
 // Fix tipo in bloodhound
 MATCH (c) WHERE c.samaccoutname IS NOT NULL SET c.samaccountname=toUpper(c.samaccoutname);
 MATCH (c) WHERE c.samaccoutname IS NOT NULL SET c.samaccoutname=NULL;
-MATCH (c:Computer) SET c.name=replace(c.samaccountname,'$','')+'.'+c.domain;
+MATCH (c:Computer) WHERE c.name IS NULL SET c.name=replace(c.samaccountname,'$','')+'.'+c.domain;
 // Fix group naming
 MATCH (g:Group) WHERE g.name IS NULL SET g.name=(CASE WHEN g.samaccountname IS NULL THEN g.objectid ELSE g.samaccountname END);
 MATCH (g:Group) WHERE g.samaccountname IS NULL SET g.samaccountname=SPLIT(g.name,"@")[0];
+MATCH (c) WHERE c.name IS NULL SET c.name=replace(c.samaccountname,'$','')+'?'+c.domain;
 
 
 // Normalize fields in bloodhound

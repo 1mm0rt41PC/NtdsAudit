@@ -62,7 +62,14 @@ export NEO4J_USER="neo4j"
 export NEO4J_PASS="`ps faux | md5sum | cut -d ' ' -f1`"
 export HASHCAT_PATH=/opt/hashcat/hashcat.bin
 export NEO4J_DOCKER_NAME='neo4j'
-alias cypher_shell="docker exec $NEO4J_DOCKER_NAME /var/lib/neo4j/bin/cypher-shell -u $NEO4J_USER -p $NEO4J_PASS -f"
+function cypher_shell {
+	logInfo "Running $1"
+	docker exec $NEO4J_DOCKER_NAME /var/lib/neo4j/bin/cypher-shell -u $NEO4J_USER -p $NEO4J_PASS -f "$1"
+}
+function logInfo
+{
+	echo -e "\033[33m[`date '+%Y-%m-%d %Hh%Mm%S'`][+] $1\033[0m"
+}
 export tmpFile=`mktemp`
 cat <<EOD > $NEO4J_PATH/.env.docker
 NEO4J_USER=$NEO4J_USER
@@ -70,30 +77,49 @@ NEO4J_PASS=$NEO4J_PASS
 NEOUSER=$NEO4J_USER
 NEOPWD=$NEO4J_PASS
 NEOURL=bolt://127.0.0.1:7687/
+NEO4J_apoc_export_file_enabled=true
+NEO4J_apoc_import_file_enabled=true
+NEO4J_apoc_import_file_use__neo4j__config=true
+NEO4J_PLUGINS=["apoc"]
+NEO4J_AUTH=$NEO4J_USER/$NEO4J_PASS
 EOD
 
+
+logInfo "Cleaning up old docker named $NEO4J_DOCKER_NAME"
+docker kill $NEO4J_DOCKER_NAME 2>/dev/null
+docker rm $NEO4J_DOCKER_NAME 2>/dev/null
+
+
+logInfo "Creating secretdumps.csv"
 mkdir -p $NEO4J_PATH/neo4j-import/
 export TMP_NTDS="${tmpFile}.secretdumps"
 echo 'sid,nthash' > $NEO4J_PATH/neo4j-import/secretdumps.csv
 grep -Ei '^[^$]+:[a-fA-F0-9]{32}:[a-fA-F0-9]{32}:::' $SECRETDUMPS | grep -vF '_history' | grep -viF '31d6cfe0d16ae931b73c59d7e0c089c0' | tr "[:lower:]" "[:upper:]" | tee $TMP_NTDS | sed -E 's/[^\r\n]+:([0-9]+):[A-F0-9]{32}:([A-F0-9]{32}):::/\1,\2/g' >> $NEO4J_PATH/neo4j-import/secretdumps.csv
+
+logInfo "Creating temp.weak-clear-password && temp.weak-hashes"
 export WEAK_CLEAR_PASSWORD="${tmpFile}.weak-clear-password"
 $HASHCAT_PATH -m 1000 --quiet --show --outfile-format 1 $TMP_NTDS | grep -vF 'Failed to parse hashes' | tr "[:lower:]" "[:upper:]" | sort -u > "${tmpFile}.weak-hashes"
 
 # Cleartext password for analyze
+logInfo "Creating temp.nthash" 
 $HASHCAT_PATH -m 1000 --quiet --show --outfile-format 1 $TMP_NTDS | grep -vF ' ' | tr "[:lower:]" "[:upper:]" > "${tmpFile}.nthash"
+logInfo "Creating temp.clearpass" 
 $HASHCAT_PATH -m 1000 --quiet --show --outfile-format 2 $TMP_NTDS | grep -vF 'Failed to parse hashes' | $HASHCAT_PATH --quiet --stdout > "${tmpFile}.clearpass"
+logInfo "Creating temp.weak-clear-password"
 paste -d ':' "${tmpFile}.nthash" "${tmpFile}.clearpass" > $WEAK_CLEAR_PASSWORD
 
-
+logInfo "Creating temp.clearpass.b64"
 (cat "${tmpFile}.clearpass" | while read line ; do
     echo -n "$line" | base64
 done) > "${tmpFile}.b64"
 
 # Keep assoc NT:Clear (in b64)
+logInfo "Creating weak-hashes.csv"
 echo 'nthash:b64pass' > $NEO4J_PATH/neo4j-import/weak-hashes.csv 
 paste -d ':' "${tmpFile}.nthash" "${tmpFile}.b64" >> $NEO4J_PATH/neo4j-import/weak-hashes.csv
 
 # Password len
+logInfo "Creating pass_len.csv"
 echo 'nthash,len' > $NEO4J_PATH/neo4j-import/pass_len.csv
 cat "${tmpFile}.clearpass" | awk '{ print length }' > "${tmpFile}.len"
 paste -d ',' "${tmpFile}.nthash" "${tmpFile}.len" >> $NEO4J_PATH/neo4j-import/pass_len.csv
@@ -101,6 +127,7 @@ paste -d ',' "${tmpFile}.nthash" "${tmpFile}.len" >> $NEO4J_PATH/neo4j-import/pa
 ########################################################################
 # Fetch weak hashes from HIBP
 ########################################################################
+logInfo "Grabbing hashes from HIBP"
 mkdir -p /opt/hibp
 export HIBP_RESULTS="${tmpFile}.hibp"
 mkdir -p $HIBP_RESULTS
@@ -108,6 +135,7 @@ cat "${tmpFile}.weak-hashes" | cut -c1-5 | uniq | xargs -I "{}" -P20 bash -c "[ 
 cat "${tmpFile}.weak-hashes" | xargs -I "XXX" -P50 bash -c 't="XXX";grep -q -F ${t:5} /opt/hibp/${t:0:5}.txt && (echo $t >> $HIBP_RESULTS/${t:0:5}.res)'
 echo "`find $HIBP_RESULTS -iname '*.res' | wc -l` Password leaked on internet"
 # Merge result into one file
+logInfo "Creating hibp.csv"
 cat $HIBP_RESULTS/*.res | sort -u > $NEO4J_PATH/neo4j-import/hibp.csv
 rm $HIBP_RESULTS/*.res
 
@@ -121,6 +149,7 @@ geneve
 lausanne
 password
 DICO
+logInfo "Creating bad-words.csv & bad-words-nt.csv"
 (
 cat $BAD_WORD_FILE | xargs -I '{}' tre-agrep -i -k -I10 -E1 '{}' $WEAK_CLEAR_PASSWORD;
 cat $BAD_WORD_FILE | xargs -I '{}' grep -Fai '{}' $WEAK_CLEAR_PASSWORD
@@ -135,12 +164,8 @@ rm -rf ${tmpFile}.*
 docker run --rm -d --network=host -p 127.0.0.1:7474:7474 -p 127.0.0.1:7687:7687 \
 -v $NEO4J_PATH/neo4j-conf:/var/lib/neo4j/conf -v $NEO4J_PATH/neo4j-scripts:/neo4j-scripts/ \
 -v $NEO4J_PATH/neo4j-import:/var/lib/neo4j/import  --name $NEO4J_DOCKER_NAME \
--e NEO4J_apoc_export_file_enabled=true \
--e NEO4J_apoc_import_file_enabled=true \
--e NEO4J_apoc_import_file_use__neo4j__config=true \
--e NEO4J_PLUGINS=\[\"apoc\"\] \
--e NEO4J_AUTH=$NEO4J_USER/$NEO4J_PASS neo4j:4.4.21
-echo "Starting Neo4j..."
+--env-file $NEO4J_PATH/.env.docker neo4j:4.4.21
+logInfo "Starting Neo4j..."
 (docker logs -f $NEO4J_DOCKER_NAME &) | grep -q "Started."
 cypher_shell /neo4j-scripts/000-prepare-neo4j.cql
 
@@ -170,5 +195,6 @@ cypher_shell /neo4j-scripts/040-Password-length.cql
 cypher_shell /neo4j-scripts/050-Stats.cql
 cypher_shell /neo4j-scripts/060-Definition.cql
 
+logInfo 'Creating Excel'
 mkdir -p $NEO4J_PATH/output
 docker run --rm -v $NEO4J_PATH/output:/output -v $NEO4J_PATH/neo4j-import:/import:ro -v $NEO4J_PATH/:/code:ro -w /code -i python:latest bash -c "pip3 install xlsxwriter; python3 /code/excelGenerator.py"
