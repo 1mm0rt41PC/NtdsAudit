@@ -28,27 +28,45 @@ WHERE
 	OR g.samaccountname = 'DNSADMINS'
 SET
 	g.isTier0=True,
+	g.isTier0Reason='Core System',
 	g.highvalue=True;
 	
 // High value for CA manager
-MATCH p=(x)-[:ManageCa|ManageCertificates]->() SET x.highvalue=True; // return p;
+MATCH p=(x)-[:ManageCa|ManageCertificates]->()
+WHERE x.isTier0Reason IS NULL
+SET
+	x.highvalue=True,
+	x.isTier0=True,
+	x.isTier0Reason='PKI Administrator';
 
 // DcSync users
-MATCH p=(x)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) SET x.highvalue=True; // return p;
+MATCH p=(x)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)
+WHERE x.isTier0Reason IS NULL
+SET
+	x.highvalue=True,
+	x.isTier0=True,
+	x.isTier0Reason='Allowed to copy domain and all passwords (DCSync)';
 
 // SCCM
-MATCH (u) where toLower(u.description) CONTAINS 'sccm' or toLower(u.distinguishedname) CONTAINS 'sccm' set u.highvalue=true; // return u.samaccountname,u.description;
-
-// Veeam
-MATCH (u) where toLower(u.description) CONTAINS 'veeam' or toLower(u.distinguishedname) CONTAINS 'veeam' set u.highvalue=true; // return u.samaccountname,u.description;
-MATCH (u) where toLower(u.description) CONTAINS 'bomgar' or toLower(u.distinguishedname) CONTAINS 'bomgar' set u.highvalue=true; // return u.samaccountname,u.description;
+MATCH (u)
+WHERE
+	u.isTier0Reason IS NULL
+	AND (
+		   toLower(u.description) CONTAINS 'sccm' or toLower(u.samaccountname) CONTAINS 'sccm'
+		OR toLower(u.description) CONTAINS 'veeam' or toLower(u.samaccountname) CONTAINS 'veeam'
+		OR toLower(u.description) CONTAINS 'bomgar' or toLower(u.samaccountname) CONTAINS 'bomgar'
+		OR toLower(u.description) CONTAINS 'altiris' or toLower(u.samaccountname) CONTAINS 'altiris'
+	)
+SET
+	u.highvalue=true,
+	u.isTier0=true,
+	u.isTier0Reason='System deployement';
 
 // Mark GPO that apply to high value target a high value target
 MATCH p1 = (g:GPO)-[r:GPLink]->(container: OU)-[r2:Contains*1..]->(n2{highvalue: true}) SET g.highvalue=true;
 
 // Mark all member of high value as high value
 MATCH (u:User)-[:MemberOf*1..]->(g:Group{highvalue:true}) SET u.highvalue=true;
-
 
 
 // Mark all users of critical groups => memberOf Tier0

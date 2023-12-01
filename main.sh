@@ -121,11 +121,11 @@ rm -rf $NEO4J_PATH/neo4j-import/*.tmp
 ########################################################################
 # Run docker
 ########################################################################
+logInfo "Starting Neo4j with credentials $NEO4J_USER:$NEO4J_PASS ..."
 docker run --rm -d --network=host -p 127.0.0.1:7474:7474 -p 127.0.0.1:7687:7687 \
 -v $NEO4J_PATH/neo4j-conf:/var/lib/neo4j/conf -v $NEO4J_PATH/neo4j-scripts:/neo4j-scripts/ \
 -v $NEO4J_PATH/neo4j-import:/var/lib/neo4j/import  --name $NEO4J_DOCKER_NAME \
 --env-file $NEO4J_PATH/.env.docker neo4j:4.4.21
-logInfo "Starting Neo4j..."
 (docker logs -f $NEO4J_DOCKER_NAME &) | grep -q "Started."
 cypher_shell /neo4j-scripts/000-prepare-neo4j.cql
 

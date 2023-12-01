@@ -1,6 +1,6 @@
 CALL db.clearQueryCaches;
 
-// Init
+RETURN 'Init' AS `003-ntds.cql`;
 MATCH (u:User)
 	SET
 		u.owned            = FALSE,
@@ -16,16 +16,18 @@ MATCH (u:User)
 		u.isMemberOfTier0  = FALSE,
 		u.pwdHIBP          = FALSE;
 
-// Create a fields that contains all group that users is MemberOf
+RETURN 'Create a fields that contains all groups that users is MemberOf' AS `003-ntds.cql`;
+// Create a fields that contains all groups that users is MemberOf
 MATCH (u:User)-[:MemberOf]->(g:Group) SET u.memberOf = u.memberOf+g.samaccountname+' / ';
 // Clean up the field
 MATCH (u:User) WHERE u.memberOf IS NOT NULL SET u.memberOf=left(u.memberOf,size(u.memberOf)-3);
 
 
 // Load all hashes
+RETURN 'Load all hashes' AS `003-ntds.cql`;
 MATCH (d:Domain) WHERE d.domainsid IS NOT NULL
 WITH d.domainsid AS domainSid
-LOAD CSV WITH HEADERS FROM 'file:///secretdumps.csv' AS row
+LOAD CSV WITH HEADERS FROM 'file:///secretsdump.csv' AS row
 WITH row,domainSid
 WHERE
 	row IS NOT NULL AND row.sid IS NOT NULL
@@ -40,6 +42,7 @@ MATCH (u:User{objectid:userSID})
 
 
 // Load pwnd hashes
+RETURN 'Load pwnd hashes' AS `003-ntds.cql`;
 LOAD CSV WITH HEADERS FROM 'file:///weak-hashes.csv' AS row FIELDTERMINATOR ':'
 WITH row
 WHERE
@@ -51,6 +54,7 @@ SET
 	
 	
 // Load HIBP
+RETURN 'Load HIBP' AS `003-ntds.cql`;
 LOAD CSV FROM 'file:///hibp.csv' AS row
 WITH row
 WHERE
@@ -63,6 +67,7 @@ SET
 
 
 // Load Bad words
+RETURN 'Load Bad words' AS `003-ntds.cql`;
 LOAD CSV FROM 'file:///bad-words-nt.csv' AS row
 WITH row
 WHERE
@@ -75,6 +80,7 @@ SET
 
 
 // Load Length
+RETURN 'Load Length' AS `003-ntds.cql`;
 LOAD CSV WITH HEADERS FROM 'file:///pass_len.csv' AS row
 WITH row
 WHERE
@@ -86,6 +92,7 @@ SET
 
 
 // Empty password
+RETURN 'Set Empty password' AS `003-ntds.cql`;
 MATCH (u:User{pwdNtHash:'?'})
 SET
 	u.owned        = TRUE,
@@ -95,6 +102,7 @@ SET
 
 
 // Keep cache of critical path
+RETURN 'Keep cache of critical path' AS `003-ntds.cql`;
 MATCH (g) WHERE g.highvalue=True OR g.isMemberOfTier0=True
 WITH g
 MATCH p=(u:User{isMemberOfTier0:False})-[*1..3]->(g)
@@ -109,7 +117,7 @@ SET
 	u.tier0PathCount = u.tier0PathCount + 1;
 //RETURN relPath;
 
-
+RETURN 'Keep cache of weak ACL' AS `003-ntds.cql`;
 MATCH p=(u:User)-[r]->()
 WHERE LEFT(u.samaccountname,5)<>"MSOL_" AND type(r)<>"MemberOf"
 SET
