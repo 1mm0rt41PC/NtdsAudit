@@ -1,0 +1,6 @@
+welcome
+bonjour
+geneve
+lausanne
+password
+my-corp-name

@@ -21,7 +21,7 @@ RETURN
 	u.tier0PathCount AS `Number of items of Tier0 that can be compromised`,
 	u.tier0Path AS `Path to item of Tier0 that can be compromised`,
 	u.weakAclPathCount AS `Number of items that can be compromised`,
-	u.weakAclPath AS `Path to item that can be compromised`,	
+	u.weakAclPath AS `Path to item that can be compromised`,
 	u.memberOf AS `Member Of`
 	ORDER BY u.isMemberOfTier0, u.tier0PathCount DESC
 	

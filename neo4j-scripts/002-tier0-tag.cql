@@ -11,21 +11,27 @@ WHERE
 	OR g.objectid ENDS WITH '-519'// Enterprise Admins
 	OR g.objectid ENDS WITH '-520'// Group Policy Creator Owners
 	OR g.objectid ENDS WITH '-521'// Read-only Domain Controllers
+	OR g.objectid ENDS WITH '-522'// Clonable Domain Controllers
+	OR g.objectid ENDS WITH '-525'// Protected Users
 	OR g.objectid ENDS WITH '-526'// Key Admins
 	OR g.objectid ENDS WITH '-527'// Enterprise Key Admins
-	OR g.objectid ENDS WITH '-574'// Certificate Service DCOM Access
-	OR g.objectid ENDS WITH '-S-1-5-9'// Enterprise Domain Controllers
-	OR g.objectid ENDS WITH '-S-1-5-32-544'// Administrators
-	OR g.objectid ENDS WITH '-S-1-5-32-548'// Account Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-549'// Server Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-550'// Print Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-551'// Backup Operators
-	OR g.objectid ENDS WITH '-S-1-5-32-552'// Replicator
-	OR g.objectid ENDS WITH '-S-1-5-32-574'// Certificate Service DCOM Access
+//	OR g.objectid ENDS WITH '-574'// Certificate Service DCOM Access
+	OR g.objectid ENDS WITH 'S-1-5-9'// Enterprise Domain Controllers
+	OR g.objectid ENDS WITH 'S-1-5-32-544'// Administrators
+	OR g.objectid ENDS WITH 'S-1-5-32-547'// Power Users
+	OR g.objectid ENDS WITH 'S-1-5-32-548'// Account Operators
+	OR g.objectid ENDS WITH 'S-1-5-32-549'// Server Operators
+	OR g.objectid ENDS WITH 'S-1-5-32-550'// Print Operators
+	OR g.objectid ENDS WITH 'S-1-5-32-551'// Backup Operators
+	OR g.objectid ENDS WITH 'S-1-5-32-552'// Replicator
+	OR g.objectid ENDS WITH 'S-1-5-32-557'// BUILTIN\Incoming Forest Trust Builders
 	OR g.samaccountname = 'DNSADMINS'
 SET
 	g.isTier0=True,
 	g.highvalue=True;
+	
+// High value for CA manager
+MATCH p=(x)-[:ManageCa|ManageCertificates]->() SET x.highvalue=True; // return p;
 
 // DcSync users
 MATCH p=(x)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain) SET x.highvalue=True; // return p;

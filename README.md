@@ -33,7 +33,7 @@ Where `C:\pentest` is the path to the folder where you want the files to be crea
 
 Then on Kali linux like extract hashes via impacket:
 ```bash
-root@kali:~$ secretdumps.py -history -system SYSTEM -ntds ntds.dit local | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > secretdumps.txt
+root@kali:~$ secretsdump.py -history -system SYSTEM -ntds ntds.dit local | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > ~/NtdsAudit/neo4j-import/secretsdump.txt
 xxx\azerty:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history0:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history1:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
@@ -60,7 +60,7 @@ computer47$:569350:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b514
 
 #### 1.B Bis: Dump the domain via dcsync
 ```bash
-root@kali:~$ secretdumps.py -history DOMAIN/DOMAINADMIN_USER:PASSWORD@IP_DC | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > secretdumps.txt
+root@kali:~$ secretsdump.py -history DOMAIN/DOMAINADMIN_USER:PASSWORD@IP_DC | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > ~/NtdsAudit/neo4j-import/secretsdump.txt
 xxx\azerty:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history0:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history1:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
@@ -88,7 +88,7 @@ computer47$:569350:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b514
 Remove all accounts that have a dynamic password (Computers, krbtgt, MSOL_...)
 
 ```bash
-root@kali:~$ grep -Ei '^[^$]+:[a-f0-9]{32}:[a-f0-9]{32}:::' secretdumps.txt | grep -viE '(krbtgt|MSOL_)' > hashcat_target.txt
+root@kali:~$ grep -Ei '^[^$]+:[a-f0-9]{32}:[a-f0-9]{32}:::' ~/NtdsAudit/neo4j-import/secretsdump.txt | grep -viE '(krbtgt|MSOL_)' > hashcat_target.txt
 ```
 
 #### 1.D: Run the glorious Hashcat
@@ -96,9 +96,22 @@ root@kali:~$ grep -Ei '^[^$]+:[a-f0-9]{32}:[a-f0-9]{32}:::' secretdumps.txt | gr
 root@kali:~$ hashcat -m 1000 hashcat_target.txt ...
 ```
 
-#### 2: Create a basic list of not allowed words for the corp:
+
+#### 2: Place all files in the correct path
+git clone this repo and put all files in `neo4j-import`
 ```bash
-root@kali:~/NtdsAudit/$ cat bad-word.txt
+root@kali:~$ git clone https://github.com/1mm0rt41PC/NtdsAudit
+root@kali:~$ cd NtdsAudit
+root@kali:~/NtdsAudit/$ ll neo4j-import
+-rwx------  1 root root 37233326 Nov  5 22:35 corp.lan_bloodhound.zip
+-rwx------  1 root root   163436 Nov  5 23:01 hashcat.potfile
+-rwx------  1 root root   163436 Nov  5 23:01 secretsdump.txt
+-rwx------  1 root root   163436 Nov  5 23:01 badwords.txt
+```
+
+#### 3: Create a basic list of not allowed words for the corp:
+```bash
+root@kali:~/NtdsAudit/neo4j-import/$ cat bad-word.txt
 welcome
 bonjour
 geneve
@@ -107,19 +120,9 @@ password
 my-corp
 ```
 
-#### 3: Place all files in the correct path
-git clone this repo and put all files in `neo4j-import`
-```bash
-root@kali:~$ git clone https://github.com/1mm0rt41PC/NtdsAudit
-root@kali:~$ cd NtdsAudit
-root@kali:~/NtdsAudit/$ ll neo4j-import
--rwx------  1 root root 37233326 Nov  5 22:35 corp.lan_bloodhound.zip
--rwx------  1 root root   163436 Nov  5 23:01 secretdumps.csv
-```
-
 ## Generate base CSV for Bloodhound
 ```bash
-root@kali:~/NtdsAudit/$ bash main.sh ~/NtdsAudit/neo4j-import/secretdumps.csv ~/NtdsAudit/bad-word.txt
+root@kali:~/NtdsAudit/$ bash main.sh
 ...
 root@kali:~/NtdsAudit/$ ls output
 -rwx------  1 root root 37233326 Nov  5 23:35 PasswordPolicy.xlsx
