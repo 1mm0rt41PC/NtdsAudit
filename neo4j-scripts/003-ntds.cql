@@ -100,6 +100,9 @@ SET
 	u.pwdClearText = 'PEVNUFRZPg==',
 	u.pwdLength    = 0;
 
+// Fix bad name
+MATCH (u) WHERE u.name IS NULL AND u.samaccountname IS NOT NULL SET u.name = u.samaccountname RETURN COUNT(u);
+MATCH (u) WHERE u.name IS NULL SET u.name = u.objectid RETURN COUNT(u);
 
 // Keep cache of critical path
 RETURN 'Keep cache of critical path' AS `003-ntds.cql`;
