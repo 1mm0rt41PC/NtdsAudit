@@ -128,6 +128,10 @@ root@kali:~/NtdsAudit/$ ls output
 -rwx------  1 root root 37233326 Nov  5 23:35 PasswordPolicy.xlsx
 ```
 
+It's possible to get cleartext password in the excel via:
+```bash
+root@kali:~/NtdsAudit/$ bash main.sh --clear-pass
+```
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [screenshot]: doc/screenshot.png
