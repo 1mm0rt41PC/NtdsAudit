@@ -120,7 +120,7 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> int:
 					elif col.startswith('b64:'):
 						if _APPEND_B64_CLEAR_PASS:
 							try:
-								ws.write(i, c, b64decode(row[col]).replace('\n',''))
+								ws.write(i, c, b64decode(row[col]).decode('utf8'))
 							except Exception as e:
 								print(f'[!]     > Err ({e}) while unbase64 >{row[col]}<')
 								ws.write(i, c, row[col])
