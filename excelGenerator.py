@@ -22,6 +22,8 @@ def main():
 	print(f'[+] Creating {_XSLX_OUTPUT}')
 	wb = xlsxwriter.Workbook(_XSLX_OUTPUT)
 
+	print(f'[+] Add sensitives datas (password in cleartext): {_APPEND_B64_CLEAR_PASS}')
+
 	ws = wb.add_worksheet('Statistics')
 	ws.insert_image('A1', './Background.png')
 	ws.set_row(0, 180)  # Set the height of Row 1 to 20.ws = wb.add_worksheet('Users')
