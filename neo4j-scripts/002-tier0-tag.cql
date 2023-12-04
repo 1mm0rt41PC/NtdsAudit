@@ -81,7 +81,7 @@ SET
 	x.highvalue=True,
 	x.isTier0=True,
 	x.isTier0Reason='PKI Administrator'
-RETURN g.name AS `Tier0 List - PKI Administrator`;
+RETURN x.name AS `Tier0 List - PKI Administrator`;
 
 
 // DcSync users
@@ -92,7 +92,7 @@ SET
 	x.highvalue=True,
 	x.isTier0=True,
 	x.isTier0Reason='Allowed to copy domain and all passwords (DCSync)'
-RETURN g.name AS `Tier0 List - DCSync`;
+RETURN x.name AS `Tier0 List - DCSync`;
 
 
 RETURN "[*] Mark High value for critical apps" AS `002-tier0-tag.cql`;
@@ -109,7 +109,7 @@ SET
 	u.highvalue=True,
 	u.isTier0=True,
 	u.isTier0Reason='System deployement'
-RETURN g.name AS `Tier0 List - System deployement`;
+RETURN u.name AS `Tier0 List - System deployement`;
 
 
 // Mark GPO that apply to high value target a high value target
@@ -124,4 +124,5 @@ MATCH (g:Group{isTier0:True})
 WITH g
 MATCH (u:User)-[:MemberOf*..]->(g)
 SET
-	u.isMemberOfTier0=True;
+	u.isMemberOfTier0=True
+RETURN COUNT(u) AS `Nb Member Of Tier0`;
