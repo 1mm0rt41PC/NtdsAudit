@@ -9,7 +9,7 @@ RETURN "[*] Mark HasSession of SPN" AS `002-tier0-tag.cql`;
 // classe_du_service/hostname_ou_FQDN:port/nom_arbitraire
 
 // Mark HasSession of SPN
-MATCH (u:User{hasspn:true})
+MATCH (u:User{hasspn:True})
 WHERE NOT (u.objectid ENDS WITH '-502')
 UNWIND u.serviceprincipalnames AS spn
 WITH u, split(replace(toUpper(spn),'@','.'),'/') AS tmp
@@ -18,8 +18,10 @@ WITH u, split(tmp[0],'.')[0]+'$' AS san, (CASE WHEN size(tmp)>1 THEN krbService+
 MATCH (c:Computer{samaccountname:san})
 MERGE (c)-[r:HasSession]->(u)
 	SET r.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService])
-MERGE (c)-[r2:HasKerberosService]->(u)
-	SET r2.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService]);
+MERGE q=(c)-[r2:HasKerberosService]->(u)
+	SET r2.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService])
+RETURN SIZE(q) AS `Nb Sessions VIA SPN`;
+
 
 RETURN "[*] List open ports via SPN" AS `002-tier0-tag.cql`;
 MATCH (u:Computer)
@@ -27,16 +29,18 @@ WHERE SIZE(u.serviceprincipalnames) > 0
 UNWIND [s in u.serviceprincipalnames WHERE not (toUpper(s) CONTAINS 'HOST') AND not (toUpper(s) CONTAINS 'RESTRICTEDKRBHOST')] AS spn
 WITH u, split(replace(toUpper(spn),'@','.'),'/') AS tmp
 WITH u, tmp[0] AS krbService, split(tmp[1],':') AS tmp
-WITH u, split(tmp[0],'.')[0]+'$' AS san, "Port: "+(CASE WHEN size(tmp)>1 THEN krbService+':'+tmp[1] ELSE krbService END) AS krbService
+WITH u, split(tmp[0],'.')[0]+'$' AS san, 'Port '+(CASE WHEN size(tmp)>1 THEN krbService+':'+tmp[1] ELSE krbService END) AS krbService
 MERGE (p:Group:Port{objectid:krbService})
 	ON CREATE SET
 		p.samaccountname=krbService,
 		p.name=krbService
 MERGE (u)-[:HasOpenPort]->(p)
 MERGE (u)-[:MemberOf]->(p)
+RETURN COUNT(p) AS `Nb open ports`;
 
 
 // Mark all users of critical groups => memberOf Tier0
+RETURN "[*] Mark all users of critical groups => memberOf Tier0" AS `002-tier0-tag.cql`;
 MATCH (g:Group)
 WHERE
 	   g.objectid ENDS WITH '-498'// Enterprise Read-only Domain Controllers
@@ -65,25 +69,33 @@ WHERE
 SET
 	g.isTier0=True,
 	g.isTier0Reason='Core System',
-	g.highvalue=True;
+	g.highvalue=True
+RETURN g.name AS `Tier0 List - Core System`;
+
 	
 // High value for CA manager
+RETURN "[*] Mark High value for CA manager" AS `002-tier0-tag.cql`;
 MATCH p=(x)-[:ManageCa|ManageCertificates]->()
 WHERE x.isTier0Reason IS NULL
 SET
 	x.highvalue=True,
 	x.isTier0=True,
-	x.isTier0Reason='PKI Administrator';
+	x.isTier0Reason='PKI Administrator'
+RETURN g.name AS `Tier0 List - PKI Administrator`;
+
 
 // DcSync users
+RETURN "[*] Mark High value for DcSync users" AS `002-tier0-tag.cql`;
 MATCH p=(x)-[:DCSync|AllExtendedRights|GenericAll]->(:Domain)
 WHERE x.isTier0Reason IS NULL
 SET
 	x.highvalue=True,
 	x.isTier0=True,
-	x.isTier0Reason='Allowed to copy domain and all passwords (DCSync)';
+	x.isTier0Reason='Allowed to copy domain and all passwords (DCSync)'
+RETURN g.name AS `Tier0 List - DCSync`;
 
-// SCCM
+
+RETURN "[*] Mark High value for critical apps" AS `002-tier0-tag.cql`;
 MATCH (u)
 WHERE
 	u.isTier0Reason IS NULL
@@ -94,15 +106,17 @@ WHERE
 		OR toLower(u.description) CONTAINS 'altiris' or toLower(u.samaccountname) CONTAINS 'altiris'
 	)
 SET
-	u.highvalue=true,
-	u.isTier0=true,
-	u.isTier0Reason='System deployement';
+	u.highvalue=True,
+	u.isTier0=True,
+	u.isTier0Reason='System deployement'
+RETURN g.name AS `Tier0 List - System deployement`;
+
 
 // Mark GPO that apply to high value target a high value target
-MATCH p1 = (g:GPO)-[r:GPLink]->(container: OU)-[r2:Contains*1..]->(n2{highvalue: true}) SET g.highvalue=true;
+MATCH p1 = (g:GPO)-[r:GPLink]->(container: OU)-[r2:Contains*1..]->(n2{highvalue: True}) SET g.highvalue=True;
 
 // Mark all member of high value as high value
-MATCH (u:User)-[:MemberOf*1..]->(g:Group{highvalue:true}) SET u.highvalue=true;
+MATCH (u:User)-[:MemberOf*1..]->(g:Group{highvalue:True}) SET u.highvalue=True;
 
 
 // Mark all users of critical groups => memberOf Tier0
