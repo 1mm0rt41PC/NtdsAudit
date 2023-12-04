@@ -49,3 +49,21 @@ MATCH (n:GPO) WHERE n.type = 'Certificate Template' SET n:CertificateTemplate;
 MATCH (n:GPO) WHERE n.type = 'Enrollment Service' SET n:CA;
 
 MATCH (c) WHERE c.samaccountname IS NOT NULL SET c.samaccountname=toUpper(c.samaccountname);
+
+
+
+RETURN 'Init' AS `001-fix-bloodhound-err.cql`;
+MATCH (u:User)
+	SET
+		u.owned            = FALSE,
+		u.pwdNtHash        = '?',
+		u.pwdClearText     = NULL,
+		u.pwdBadWord       = FALSE,
+		u.pwdLength        = -1,
+		u.tier0PathCount   = 0,
+		u.tier0Path        = '',
+		u.weakAclPath      = '',
+		u.weakAclPathCount = 0,
+		u.memberOf         = '',
+		u.isMemberOfTier0  = FALSE,
+		u.pwdHIBP          = FALSE;

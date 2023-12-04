@@ -13,7 +13,6 @@ MATCH (u:User)
 		u.weakAclPath      = '',
 		u.weakAclPathCount = 0,
 		u.memberOf         = '',
-		u.isMemberOfTier0  = FALSE,
 		u.pwdHIBP          = FALSE;
 
 RETURN 'Create a fields that contains all groups that users is MemberOf' AS `003-ntds.cql`;
