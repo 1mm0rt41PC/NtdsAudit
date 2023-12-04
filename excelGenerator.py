@@ -117,13 +117,13 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> int:
 						ws.write_boolean(i, c, True)
 					elif row[col] == 'false':
 						ws.write_boolean(i, c, False)
-					elif row[col].startswith('b64:'):
+					elif col.startswith('b64:'):
 						if _APPEND_B64_CLEAR_PASS:
 							try:
-								ws.write(i, c, b64decode(row[col][4:]))
+								ws.write(i, c, b64decode(row[col]))
 							except Exception as e:
+								print(f'[!]     > Err ({e}) while unbase64 >{row[col]}<')
 								ws.write(i, c, row[col])
-								print(f'[!] Err ({e}) while unbase64 >{row[col][4:]}< from >{row[col]}<')
 						else:
 							c = c-1
 					else:
