@@ -1,5 +1,43 @@
 CALL db.clearQueryCaches;
 
+RETURN "[*] Mark HasSession of SPN" AS `002-tier0-tag.cql`;
+// FNCEWS/host_name
+// FNCEWS/host_name@DOMAIN.COM
+// FNCEWS/host_name.DOMAIN.COM
+// classe_du_service/hostname_ou_FQDN
+// classe_du_service/hostname_ou_FQDN:port
+// classe_du_service/hostname_ou_FQDN:port/nom_arbitraire
+
+// Mark HasSession of SPN
+MATCH (u:User{hasspn:true})
+WHERE NOT (u.objectid ENDS WITH '-502')
+UNWIND u.serviceprincipalnames AS spn
+WITH u, split(replace(toUpper(spn),'@','.'),'/') AS tmp
+WITH u, tmp[0] AS krbService, split(tmp[1],':') AS tmp
+WITH u, split(tmp[0],'.')[0]+'$' AS san, (CASE WHEN size(tmp)>1 THEN krbService+':'+tmp[1] ELSE krbService END) AS krbService
+MATCH (c:Computer{samaccountname:san})
+MERGE (c)-[r:HasSession]->(u)
+	SET r.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService])
+MERGE (c)-[r2:HasKerberosService]->(u)
+	SET r2.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService]);
+
+RETURN "[*] List open ports via SPN" AS `002-tier0-tag.cql`;
+MATCH (u:Computer)
+WHERE SIZE(u.serviceprincipalnames) > 0
+UNWIND [s in u.serviceprincipalnames WHERE not (toUpper(s) CONTAINS 'HOST') AND not (toUpper(s) CONTAINS 'RESTRICTEDKRBHOST')] AS spn
+WITH u, split(replace(toUpper(spn),'@','.'),'/') AS tmp
+WITH u, tmp[0] AS krbService, split(tmp[1],':') AS tmp
+WITH u, split(tmp[0],'.')[0]+'$' AS san, "Port: "+(CASE WHEN size(tmp)>1 THEN krbService+':'+tmp[1] ELSE krbService END) AS krbService
+MERGE (p:Group:Port{objectid:krbService})
+	ON CREATE SET
+		p.samaccountname=krbService,
+		p.name=krbService
+MERGE (u)-[:HasOpenPort]->(p)
+MERGE (u)-[:MemberOf]->(p)
+
+
+RETURN "[*] Script ends OK" AS `001-fix-bloodhound-err.cql`;
+
 // Mark all users of critical groups => memberOf Tier0
 MATCH (g:Group)
 WHERE
