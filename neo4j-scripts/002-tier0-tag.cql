@@ -66,6 +66,7 @@ WHERE
 	OR g.objectid ENDS WITH 'S-1-5-32-552'// Replicator
 	OR g.objectid ENDS WITH 'S-1-5-32-557'// BUILTIN\Incoming Forest Trust Builders
 	OR g.samaccountname = 'DNSADMINS'
+	OR g.samaccountname = 'EXCHANGE WINDOWS PERMISSIONS'
 SET
 	g.isTier0=True,
 	g.isTier0Reason='Core System',
