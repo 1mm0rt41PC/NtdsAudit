@@ -20,7 +20,7 @@ MERGE (c)-[r:HasSession]->(u)
 	SET r.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService])
 MERGE q=(c)-[r2:HasKerberosService]->(u)
 	SET r2.port=apoc.coll.toSet(coalesce(r.port, []) + [krbService])
-RETURN SIZE(q) AS `Nb Sessions VIA SPN`;
+RETURN COUNT(r) AS `Nb Sessions VIA SPN`;
 
 
 RETURN "[*] List open ports via SPN" AS `002-tier0-tag.cql`;
