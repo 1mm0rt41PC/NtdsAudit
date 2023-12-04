@@ -36,8 +36,6 @@ MERGE (u)-[:HasOpenPort]->(p)
 MERGE (u)-[:MemberOf]->(p)
 
 
-RETURN "[*] Script ends OK" AS `001-fix-bloodhound-err.cql`;
-
 // Mark all users of critical groups => memberOf Tier0
 MATCH (g:Group)
 WHERE
