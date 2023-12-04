@@ -38,7 +38,8 @@ MATCH (u:User{objectid:userSID})
 		u.pwdNtHash  = nthash,
 		u.pwdBadWord = FALSE,
 		u.pwdLength  = -1,
-		u.pwdHIBP    = FALSE;
+		u.pwdHIBP    = FALSE
+RETURN COUNT(u) AS `Nb hash loaded`;
 
 
 // Load pwnd hashes
@@ -63,7 +64,8 @@ WITH row[0] as nthash
 MATCH (u:User{pwdNtHash:nthash})
 SET
 	u.owned          = TRUE,
-	u.pwdHIBP        = TRUE;
+	u.pwdHIBP        = TRUE
+RETURN COUNT(u) AS `Nb hash found in HIBP loaded`;
 
 
 // Load Bad words
@@ -76,7 +78,9 @@ WITH row[0] as nthash
 MATCH (u:User{pwdNtHash:nthash})
 SET
 	u.owned          = TRUE,
-	u.pwdBadWord     = TRUE;
+	u.pwdBadWord     = TRUE
+RETURN COUNT(u) AS `Nb hash found with banned word loaded`;
+
 
 
 // Load Length
@@ -101,8 +105,8 @@ SET
 	u.pwdLength    = 0;
 
 // Fix bad name
-MATCH (u) WHERE u.name IS NULL AND u.samaccountname IS NOT NULL SET u.name = u.samaccountname RETURN COUNT(u);
-MATCH (u) WHERE u.name IS NULL SET u.name = u.objectid RETURN COUNT(u);
+MATCH (u) WHERE u.name IS NULL AND u.samaccountname IS NOT NULL SET u.name = u.samaccountname RETURN COUNT(u) AS `Nb object with SAN without NAME`;
+MATCH (u) WHERE u.name IS NULL SET u.name = u.objectid RETURN COUNT(u) AS `Nb object without NAME`;
 
 // Keep cache of critical path
 RETURN 'Keep cache of critical path' AS `003-ntds.cql`;
