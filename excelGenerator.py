@@ -121,8 +121,9 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> int:
 						if _APPEND_B64_CLEAR_PASS:
 							try:
 								ws.write(i, c, b64decode(row[col][4:]))
-							except:
-								ws.write(i, c, row[col][4:])
+							except Exception as e:
+								ws.write(i, c, row[col])
+								print(f'[!] Err ({e}) while unbase64 >{row[col][4:]}< from >{row[col]}<')
 						else:
 							c = c-1
 					else:
