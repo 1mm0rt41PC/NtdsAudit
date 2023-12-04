@@ -9,6 +9,7 @@ RETURN
 	date(datetime({epochSeconds:toInteger(u.lastlogontimestamp)})) AS LastLogon,
 	u.enabled AS Enabled,
 	u.owned AS `Weak password`,
+	u.pwdClearText AS `b64:`,
 	u.pwdBadWord AS `Password containing a forbidden word`,
 	u.pwdLength AS `Password length`,u.pwdHIBP AS `Password leaked on the Internet`,
 	u.pwdneverexpires AS `Password never expires`,

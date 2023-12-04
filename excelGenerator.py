@@ -1,10 +1,11 @@
 import sys,os
 import xlsxwriter
 import csv
+from base64 import b64decode
 
 _XSLX_OUTPUT = '/output/PasswordPolicy.xlsx'
 _CSV_PATH = '/import/'
-
+_APPEND_B64_CLEAR_PASS = len(sys.argv) == 2 and sys.argv[1] == '--clear-pass'
 
 maxInt = sys.maxsize
 while True:
@@ -114,6 +115,14 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> int:
 						ws.write_boolean(i, c, True)
 					elif row[col] == 'false':
 						ws.write_boolean(i, c, False)
+					elif row[col].startswith('b64:'):
+						if _APPEND_B64_CLEAR_PASS:
+							try:
+								ws.write(i, c, b64decode(row[col][4:]))
+							except:
+								ws.write(i, c, row[col][4:])
+						else:
+							c = c-1
 					else:
 						ws.write(i, c, row[col])
 				c +=1
@@ -121,7 +130,10 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> int:
 		print(f'[+]     > Loaded {i-iRow} lines')
 		cols = []
 		for col in csv_reader.fieldnames:
-			cols.append({"header":col})
+			if _APPEND_B64_CLEAR_PASS:
+				cols.append({"header":col})
+			elif not col.startswith('b64:'):
+				cols.append({"header":col})
 		tabPos = f'{iCol}{iRow+1}:{chr(ord("A")+iCol_it+len(cols)-1)}{i}'
 		print(f'[+]     > Creating table at {tabPos}')
 		ws.add_table(tabPos,{'header_row': header_row, 'style': 'TableStyleMedium4',"columns": cols})

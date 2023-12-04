@@ -157,7 +157,7 @@ cypher_shell /neo4j-scripts/060-Definition.cql
 
 logInfo 'Creating Excel'
 mkdir -p $NEO4J_PATH/output
-docker run --rm -v $NEO4J_PATH/output:/output -v $NEO4J_PATH/neo4j-import:/import:ro -v $NEO4J_PATH/:/code:ro -w /code -i python:latest bash -c "pip3 install xlsxwriter; python3 /code/excelGenerator.py"
+docker run --rm -v $NEO4J_PATH/output:/output -v $NEO4J_PATH/neo4j-import:/import:ro -v $NEO4J_PATH/:/code:ro -w /code -i python:latest bash -c "pip3 install xlsxwriter; python3 /code/excelGenerator.py $1"
 
 
 logInfo "Cleaning up old docker named $NEO4J_DOCKER_NAME"
