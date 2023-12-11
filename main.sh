@@ -61,7 +61,7 @@ logInfo "Creating secretsdump.csv"
 mkdir -p $NEO4J_PATH/neo4j-import/
 export TMP_NTDS="$NEO4J_PATH/neo4j-import/secretsdump.tmp"
 echo 'sid,nthash' > $NEO4J_PATH/neo4j-import/secretsdump.csv
-grep -Ei '^[^$]+:[a-fA-F0-9]{32}:[a-fA-F0-9]{32}:::' $SECRETSDUMP | grep -vF '_history' | grep -viF '31d6cfe0d16ae931b73c59d7e0c089c0' | tr "[:lower:]" "[:upper:]" | tee $TMP_NTDS | sed -E 's/[^\r\n]+:([0-9]+):[A-F0-9]{32}:([A-F0-9]{32}):::/\1,\2/g' >> $NEO4J_PATH/neo4j-import/secretsdump.csv
+grep -oEi '^([^$]+:[a-fA-F0-9]{32}:[a-fA-F0-9]{32}:::)' $SECRETSDUMP | grep -vF '_history' | grep -viF '31d6cfe0d16ae931b73c59d7e0c089c0' | tr "[:lower:]" "[:upper:]" | tee $TMP_NTDS | sed -E 's/[^\r\n]+:([0-9]+):[A-F0-9]{32}:([A-F0-9]{32}):::/\1,\2/g' >> $NEO4J_PATH/neo4j-import/secretsdump.csv
 
 logInfo "Creating temp.weak-clear-password && temp.weak-hashes"
 export WEAK_CLEAR_PASSWORD="$NEO4J_PATH/neo4j-import/weak-clear-password.tmp"
