@@ -33,7 +33,7 @@ Where `C:\pentest` is the path to the folder where you want the files to be crea
 
 Then on Kali linux like extract hashes via impacket:
 ```bash
-root@kali:~$ secretsdump.py -history -system SYSTEM -ntds ntds.dit local | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > ~/NtdsAudit/neo4j-import/secretsdump.txt
+root@kali:~$ secretsdump.py -history -system SYSTEM -ntds ntds.dit local > ~/NtdsAudit/neo4j-import/secretsdump.txt
 xxx\azerty:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history0:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history1:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
@@ -60,7 +60,7 @@ computer47$:569350:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b514
 
 #### 1.B Bis: Dump the domain via dcsync
 ```bash
-root@kali:~$ secretsdump.py -history DOMAIN/DOMAINADMIN_USER:PASSWORD@IP_DC | grep -Ei ':[a-f0-9]{32}:[a-f0-9]{32}:::' > ~/NtdsAudit/neo4j-import/secretsdump.txt
+root@kali:~$ secretsdump.py -history DOMAIN/DOMAINADMIN_USER:PASSWORD@IP_DC > ~/NtdsAudit/neo4j-import/secretsdump.txt
 xxx\azerty:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history0:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
 xxx\azerty_history1:95140:aad3b435b51404eeaad3b435b51404ee:aad3b435b51404eeaad3b435b51404ee:::
