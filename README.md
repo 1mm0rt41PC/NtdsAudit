@@ -122,7 +122,7 @@ my-corp
 
 ## Generate base CSV for Bloodhound
 ```bash
-root@kali:~/NtdsAudit/$ bash main.sh
+root@kali:~/NtdsAudit/$ sudo bash main.sh # sudo required for docker and HIBP database storage in /opt
 ...
 root@kali:~/NtdsAudit/$ ls output
 -rwx------  1 root root 37233326 Nov  5 23:35 PasswordPolicy.xlsx
