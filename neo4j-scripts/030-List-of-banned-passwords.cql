@@ -1,7 +1,7 @@
 WITH "
 
 MATCH (u:User{enabled:True,pwdBadWord:True})
-WHERE u.samaccountname IS NOT NULL AND u.pwdClearText IS NOT NULL
+WHERE u.samaccountname IS NOT NULL AND u.pwdClearText IS NOT NULL AND u.pwdNtHash <> '?'
 WITH apoc.text.base64Decode(u.pwdClearText) AS `ClearText`, COUNT(u.pwdClearText) as nb, u.pwdNtHash AS NtHash
 RETURN NtHash, ClearText, nb AS `Reused`
 ORDER BY nb DESC;
