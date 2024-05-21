@@ -96,12 +96,14 @@ SET
 
 // Empty password
 RETURN 'Set Empty password' AS `003-ntds.cql`;
+/*
 MATCH (u:User{pwdNtHash:'?'})
 SET
 	u.owned        = TRUE,
 	u.pwdNtHash    = '31D6CFE0D16AE931B73C59D7E0C089C0',
 	u.pwdClearText = 'PEVNUFRZPg==',
 	u.pwdLength    = 0;
+// */
 
 // Fix bad name
 MATCH (u) WHERE u.name IS NULL AND u.samaccountname IS NOT NULL SET u.name = u.samaccountname RETURN COUNT(u) AS `Nb object with SAN without NAME`;
