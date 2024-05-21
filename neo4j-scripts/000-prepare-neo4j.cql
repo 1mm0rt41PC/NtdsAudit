@@ -18,3 +18,4 @@ CREATE INDEX UserpwdHIBP IF NOT EXISTS FOR (u:User) on (u.pwdHIBP);
 CREATE INDEX ComputerHighValueTarget IF NOT EXISTS FOR (c:Computer) ON (c.highvalue);
 CREATE INDEX ComputerSamAccountName IF NOT EXISTS FOR (c:Computer) on (c.samaccountname);
 CREATE INDEX ComputerSamAccoutName IF NOT EXISTS FOR (c:Computer) on (c.samaccoutname);
+CREATE INDEX GroupHighValueTarget IF NOT EXISTS FOR (c:Group) ON (c.highvalue);
