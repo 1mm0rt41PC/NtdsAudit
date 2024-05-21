@@ -1,9 +1,10 @@
 WITH "
 
 MATCH (u:User)
-WHERE u.samaccountname IS NOT NULL
+WHERE u.samaccountname IS NOT NULL AND u.pwdNtHash <> '?'
 RETURN
 	u.objectid AS SID,
+	u.domain AS Domain,
 	u.samaccountname AS `SamAccountName`,
 	u.distinguishedname AS `Distinguished Name`,
 	date(datetime({epochSeconds:toInteger(u.lastlogontimestamp)})) AS LastLogon,
