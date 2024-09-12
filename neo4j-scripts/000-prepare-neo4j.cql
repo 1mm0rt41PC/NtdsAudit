@@ -21,3 +21,4 @@ CREATE INDEX ComputerHighValueTarget IF NOT EXISTS FOR (c:Computer) ON (c.highva
 CREATE INDEX ComputerSamAccountName IF NOT EXISTS FOR (c:Computer) on (c.samaccountname);
 CREATE INDEX ComputerSamAccoutName IF NOT EXISTS FOR (c:Computer) on (c.samaccoutname);
 CREATE INDEX ComputerisMemberOfTier0 IF NOT EXISTS FOR (c:Computer) on (c.isMemberOfTier0);
+CREATE INDEX GroupHighValueTarget IF NOT EXISTS FOR (c:Group) ON (c.highvalue);

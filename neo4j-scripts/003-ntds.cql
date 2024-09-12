@@ -68,6 +68,7 @@ SET
 	u.pwdClearText='<EMPTY PASSWORD>',
 	u.pwdClearTextB64='<EMPTY PASSWORD>';
 
+
 // Fix bad name
 MATCH (u) WHERE u.name IS NULL AND u.samaccountname IS NOT NULL SET u.name = u.samaccountname RETURN COUNT(u) AS `Nb object with SAN without NAME`;
 MATCH (u) WHERE u.name IS NULL SET u.name = u.objectid RETURN COUNT(u) AS `Nb object without NAME`;
