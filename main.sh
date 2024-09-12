@@ -29,6 +29,7 @@ export NEO4J_PASS="`ps faux | md5sum | cut -d ' ' -f1`"
 export NEO4J_DOCKER_NAME='neo4j'
 export SECRETSDUMP=$NEO4J_PATH/neo4j-import/secretsdump.txt
 export BAD_WORD_FILE=$NEO4J_PATH/neo4j-import/badwords.txt
+export HIBPDIR=/opt/hibp
 function cypher_shell {
 	logInfo "Running $1"
 	docker exec $NEO4J_DOCKER_NAME /var/lib/neo4j/bin/cypher-shell -u $NEO4J_USER -p $NEO4J_PASS -f "$1"
@@ -51,69 +52,34 @@ NEO4J_PLUGINS=["apoc"]
 NEO4J_AUTH=$NEO4J_USER/$NEO4J_PASS
 EOD
 
-
 logInfo "Cleaning up old docker named $NEO4J_DOCKER_NAME"
 docker kill $NEO4J_DOCKER_NAME 2>/dev/null
 docker rm $NEO4J_DOCKER_NAME 2>/dev/null
 
-
-logInfo "Creating secretsdump.csv"
 mkdir -p $NEO4J_PATH/neo4j-import/
-export TMP_NTDS="$NEO4J_PATH/neo4j-import/secretsdump.tmp"
-echo 'sid,nthash' > $NEO4J_PATH/neo4j-import/secretsdump.csv
-grep -oEi '^([^$]+:[a-fA-F0-9]{32}:[a-fA-F0-9]{32}:::)' $SECRETSDUMP | grep -vF '_history' | grep -viF '31d6cfe0d16ae931b73c59d7e0c089c0' | tr "[:lower:]" "[:upper:]" | tee $TMP_NTDS | sed -E 's/[^\r\n]+:([0-9]+):[A-F0-9]{32}:([A-F0-9]{32}):::/\1,\2/g' >> $NEO4J_PATH/neo4j-import/secretsdump.csv
 
-logInfo "Creating temp.weak-clear-password && temp.weak-hashes"
-export WEAK_CLEAR_PASSWORD="$NEO4J_PATH/neo4j-import/weak-clear-password.tmp"
-$HASHCAT --potfile-path=$NEO4J_PATH/neo4j-import/hashcat.potfile -m 1000 --quiet --show --outfile-format 1 $TMP_NTDS | grep -vF 'Failed to parse hashes' | tr "[:lower:]" "[:upper:]" | sort -u > "$NEO4J_PATH/neo4j-import/weak-hashes.tmp"
-
-# Cleartext password for analyze
-logInfo "Creating temp.nthash"
-$HASHCAT --potfile-path=$NEO4J_PATH/neo4j-import/hashcat.potfile -m 1000 --quiet --show --outfile-format 1 $TMP_NTDS | grep -vF ' ' | tr "[:lower:]" "[:upper:]" > "$NEO4J_PATH/neo4j-import/nthash.tmp"
-logInfo "Creating temp.clearpass"
-$HASHCAT --potfile-path=$NEO4J_PATH/neo4j-import/hashcat.potfile -m 1000 --quiet --show --outfile-format 2 $TMP_NTDS | grep -vF 'Failed to parse hashes' | $HASHCAT --potfile-path=$NEO4J_PATH/neo4j-import/hashcat.potfile --quiet --stdout > "$NEO4J_PATH/neo4j-import/clearpass.tmp"
-logInfo "Creating temp.weak-clear-password"
-paste -d ':' "$NEO4J_PATH/neo4j-import/nthash.tmp" "$NEO4J_PATH/neo4j-import/clearpass.tmp" > $WEAK_CLEAR_PASSWORD
-
-logInfo "Creating temp.clearpass.b64"
-(cat "$NEO4J_PATH/neo4j-import/clearpass.tmp" | while read line ; do
-    echo -n "$line" | base64
-done) > "$NEO4J_PATH/neo4j-import/b64.tmp"
-
-# Keep assoc NT:Clear (in b64)
-logInfo "Creating weak-hashes.csv"
-echo 'nthash:b64pass' > $NEO4J_PATH/neo4j-import/weak-hashes.csv
-paste -d ':' "$NEO4J_PATH/neo4j-import/nthash.tmp" "$NEO4J_PATH/neo4j-import/b64.tmp" >> $NEO4J_PATH/neo4j-import/weak-hashes.csv
-
-# Password len
-logInfo "Creating pass_len.csv"
-echo 'nthash,len' > $NEO4J_PATH/neo4j-import/pass_len.csv
-cat "$NEO4J_PATH/neo4j-import/clearpass.tmp" | awk '{ print length }' > "$NEO4J_PATH/neo4j-import/len.tmp"
-paste -d ',' "$NEO4J_PATH/neo4j-import/nthash.tmp" "$NEO4J_PATH/neo4j-import/len.tmp" >> $NEO4J_PATH/neo4j-import/pass_len.csv
-
-########################################################################
-# Fetch weak hashes from HIBP
-########################################################################
-logInfo "Grabbing hashes from HIBP"
-mkdir -p /opt/hibp
-export HIBP_RESULTS="$NEO4J_PATH/neo4j-import/hibp.tmp"
-mkdir -p $HIBP_RESULTS
-cat "$NEO4J_PATH/neo4j-import/weak-hashes.tmp" | cut -c1-5 | uniq | xargs -I "{}" -P20 bash -c "[ ! -s /opt/hibp/{}.txt ] && (curl -L 'https://api.pwnedpasswords.com/range/{}?mode=ntlm' --output '/opt/hibp/{}.txt' || (sleep 2s && curl -L 'https://api.pwnedpasswords.com/range/{}?mode=ntlm' --output '/opt/hibp/{}.txt'))"
-cat "$NEO4J_PATH/neo4j-import/weak-hashes.tmp" | xargs -I "XXX" -P50 bash -c 't="XXX";grep -q -F ${t:5} /opt/hibp/${t:0:5}.txt && (echo $t >> $HIBP_RESULTS/${t:0:5}.res)'
-echo "`find $HIBP_RESULTS -iname '*.res' | wc -l` Password leaked on internet"
-# Merge result into one file
-logInfo "Creating hibp.csv"
-cat $HIBP_RESULTS/*.res | sort -u > $NEO4J_PATH/neo4j-import/hibp.csv
-rm $HIBP_RESULTS/*.res
 
 ########################################################################
 # List of not allowed word
 ########################################################################
 logInfo "Creating bad-words.csv & bad-words-nt.csv"
 (
-cat $BAD_WORD_FILE | xargs -I '{}' tre-agrep -i -k -I10 -E1 '{}' $WEAK_CLEAR_PASSWORD;
-cat $BAD_WORD_FILE | xargs -I '{}' grep -Fai '{}' $WEAK_CLEAR_PASSWORD
-) | sort -u | tee $NEO4J_PATH/neo4j-import/bad-words.csv | cut -d ':' -f1 | tr "[:lower:]" "[:upper:]" > $NEO4J_PATH/neo4j-import/bad-words-nt.csv
+cat $BAD_WORD_FILE;
+cat $BAD_WORD_FILE | /opt/hashcat/hashcat.bin -a 0 -r /opt/hashcat/rules/best64.rule --stdout | grep -vE '^.{1,4}$';
+cat $BAD_WORD_FILE | /opt/hashcat/hashcat.bin -a 0 -r /opt/hashcat/rules/rockyou-30000.rule --stdout | grep -vE '^.{1,4}$'
+) | sort -u > $NEO4J_PATH/neo4j-import/bad-words.tmp
+
+
+
+########################################################################
+# Parse secretsdump
+########################################################################
+docker run --rm -it -v $NEO4J_PATH/goHashcat/:$NEO4J_PATH/goHashcat/ golang:alpine bash -c "cd $NEO4J_PATH/goHashcat/; go build -o goHashcat main.go"
+logInfo "Creating secretsdump.csv"
+$NEO4J_PATH/goHashcat/goHashcat $SECRETSDUMP $NEO4J_PATH/neo4j-import/hashcat.potfile neo4j-import/badwords.txt $NEO4J_PATH/neo4j-import/secretsdump.csv $HIBPDIR
+
+
+# Cleanup
 rm -rf $NEO4J_PATH/neo4j-import/*.tmp
 
 

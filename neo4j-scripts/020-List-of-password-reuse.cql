@@ -1,13 +1,10 @@
 WITH "
 
 MATCH (u:User)
-WHERE u.samaccountname IS NOT NULL AND u.pwdNtHash IS NOT NULL
+WHERE u.samaccountname IS NOT NULL AND u.pwdNtHash IS NOT NULL AND u.pwdNtHash<>'<NO NTHASH>' AND u.pwdNtHash<>'?' AND u.pwdNtHash<>''
 WITH u.pwdNtHash AS pwdNtHash, COUNT(*) as nb, u.pwdClearText AS pwdClearText
 WHERE nb > 2
-RETURN pwdNtHash AS `Hash`, nb AS `Reused`, CASE pwdClearText
-	WHEN NULL THEN '<NOT FOUND>'
-	ELSE apoc.text.base64Decode(pwdClearText)
-END AS `ClearText`
+RETURN pwdNtHash AS `Hash`, nb AS `Reused`, pwdClearText
 ORDER BY nb DESC;
 	
 " AS query

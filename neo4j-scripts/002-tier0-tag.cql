@@ -73,6 +73,17 @@ SET
 	g.highvalue=True
 RETURN g.name AS `Tier0 List - Core System`;
 
+
+// High value for Azure
+MATCH (g:User)
+WHERE
+	LEFT(g.samaccountname,5)='MSOL_'
+SET
+	g.isTier0=True,
+	g.isTier0Reason='Core System Azure',
+	g.highvalue=True
+RETURN g.name AS `Tier0 List - Core System Azure`;
+
 	
 // High value for CA manager
 RETURN "[*] Mark High value for CA manager" AS `002-tier0-tag.cql`;
@@ -117,13 +128,32 @@ RETURN u.name AS `Tier0 List - System deployement`;
 MATCH p1 = (g:GPO)-[r:GPLink]->(container: OU)-[r2:Contains*1..]->(n2{highvalue: True}) SET g.highvalue=True;
 
 // Mark all member of high value as high value
-MATCH (u:User)-[:MemberOf*1..]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
+MATCH (u:User)-[:MemberOf]->(g:Group{highvalue:True}) SET u.highvalue=True;
 
 
 // Mark all users of critical groups => memberOf Tier0
-MATCH (g:Group{isTier0:True})
-WITH g
-MATCH (u:User)-[:MemberOf*..]->(g)
-SET
-	u.isMemberOfTier0=True
+MATCH (u:Group)-[:MemberOf]->(g:Group{isTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:User)-[:MemberOf]->(g:Group{isTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:User)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
 RETURN COUNT(u) AS `Nb Member Of Tier0`;
