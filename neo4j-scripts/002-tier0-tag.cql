@@ -155,5 +155,5 @@ MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTie
 MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
 MATCH (u:Group)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
 MATCH (u:User)-[:MemberOf]->(g:Group{isTier0:True}) SET u.isMemberOfTier0=True;
-MATCH (u:User)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True;
+MATCH (u:User)-[:MemberOf]->(g:Group{isMemberOfTier0:True}) SET u.isMemberOfTier0=True
 RETURN COUNT(u) AS `Nb Member Of Tier0`;

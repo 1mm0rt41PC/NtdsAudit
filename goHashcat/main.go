@@ -133,8 +133,8 @@ func main() {
 
 		// Vérifier si le mot de passe contient un mot interdit
 		account.HasBannedWord = containsBannedWord(password, bannedWordsList)
-		if account.IsPublicLeak = true {
-			if account.Pwned = false {
+		if account.IsPublicLeak == true {
+			if account.Pwned == false {
 				fmt.Println("[*] Password not found by hascat but found a public leak for ", account.SID, " with hash ", account.NTLMHash)
 				account.Pwned = true
 			}
