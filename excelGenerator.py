@@ -100,9 +100,9 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> (int,list):
 		iCol_it = ord(iCol)-ord('A')
 		iRow -= 1
 		i = iRow+1 if header_row else iRow
-		print(f'[+]     > Loading data to {sfile} col={iCol_it}, row={iRow} => {iCol}{iRow+1}')
+		print(f'[+]     > Loading data from {sfile} col={iCol_it}, row={iRow} => {iCol}{iRow+1}')
 		for row in csv_reader:
-			c=iCol_it
+			c = iCol_it
 			for col in csv_reader.fieldnames:
 				try:
 					ws.write_number(i, c, int(row[col],10))
@@ -115,7 +115,7 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> (int,list):
 						if _APPEND_B64_CLEAR_PASS:
 							ws.write(i, c, row[col])
 						else:
-							c = c-2
+							c-=1
 					else:
 						ws.write(i, c, row[col])
 				c +=1
