@@ -100,7 +100,7 @@ def loadCSV( sfile, ws, iCol, iRow, header_row ) -> (int,list):
 		iCol_it = ord(iCol)-ord('A')
 		iRow -= 1
 		i = iRow+1 if header_row else iRow
-		print(f'[+]     > Loading data from {sfile} col={iCol_it}, row={iRow} => {iCol}{iRow+1}')
+		print(f'[+]     > Loading data to {sfile} col={iCol_it}, row={iRow} => {iCol}{iRow+1}')
 		for row in csv_reader:
 			c = iCol_it
 			for col in csv_reader.fieldnames:
