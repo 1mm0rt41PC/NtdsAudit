@@ -52,6 +52,9 @@ def main():
 
 	ws = wb.add_worksheet('Password reuse')
 	loadCSV(f'Report-List-of-password-reuse.csv', ws, 'A', 1, True)
+	
+	ws = wb.add_worksheet('Password leaked')
+	loadCSV(f'Report-List-of-password-leaked.csv', ws, 'A', 1, True)	
 
 	ws = wb.add_worksheet('Password with banned words')
 	loadCSV(f'Report-List-of-banned-passwords.csv', ws, 'A', 1, True)
